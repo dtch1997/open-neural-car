@@ -1,0 +1,7 @@
+dist_threshold: 1.0
+num_simulation_time_steps: 1200
+num_episodes: 5
+num_goals: 3
+world_seed: null
+rearward_goals: False
+render: True

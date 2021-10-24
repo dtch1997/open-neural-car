@@ -1,0 +1,39 @@
+# @package _global_
+workflow: eval
+
+# specify here default evaluation configuration
+defaults:
+  - _self_
+  - agent: scp.yaml
+  - env: car.yaml
+  - policy: mlp_policy.yaml
+  - simulation: default.yaml
+  - mode: default.yaml
+  - callbacks: eval.yaml
+  - experiment: null
+  - hparams_search: null
+
+  # enable color logging
+  - override hydra/hydra_logging: colorlog
+  - override hydra/job_logging: colorlog
+
+# path to original working directory
+# hydra hijacks working directory by changing it to the current log directory,
+# so it's useful to have this path as a special variable
+# https://hydra.cc/docs/next/tutorials/basic/running_your_app/working_directory
+work_dir: ${hydra:runtime.cwd}
+
+# path to folder with data
+data_dir: ${work_dir}/data/
+
+# pretty print config at the start of the run using Rich library
+print_config: True
+
+# disable python warnings if they annoy you
+ignore_warnings: True
+
+# seed for random number generators in pytorch, numpy and python.random
+seed: null
+
+# name of the run, accessed by loggers
+name: null

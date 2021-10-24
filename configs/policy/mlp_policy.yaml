@@ -1,0 +1,9 @@
+_target_: src.policies.mlp_policy.MlpPolicy
+
+input_size: 7
+net_arch:
+  - 256
+  - 256
+output_size: 2
+lr: 0.001
+weight_decay: 0.0005
