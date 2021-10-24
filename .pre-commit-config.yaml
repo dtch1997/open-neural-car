@@ -8,6 +8,7 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
       - id: debug-statements
+        exclude: (src.envs.car|src.agents.scp)
       - id: detect-private-key
 
   # python code formatting
@@ -35,3 +36,4 @@ repos:
     rev: 3.9.2
     hooks:
       - id: flake8
+        exclude: (src.envs.car|src.agents.scp)

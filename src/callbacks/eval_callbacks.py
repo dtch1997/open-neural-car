@@ -109,10 +109,10 @@ class SaveTrajectoryToHDF5Callback(BaseCallback):
 
         # By default the state/input trajectories assume max possible simulation steps
         self.state_trajectory = self.sub_grp.create_dataset(
-            f"state_trajectory", shape=(sim_params.num_simulation_time_steps + 1, 7), dtype="f"
+            "state_trajectory", shape=(sim_params.num_simulation_time_steps + 1, 7), dtype="f"
         )
         self.input_trajectory = self.sub_grp.create_dataset(
-            f"input_trajectory", shape=(sim_params.num_simulation_time_steps, 2), dtype="f"
+            "input_trajectory", shape=(sim_params.num_simulation_time_steps, 2), dtype="f"
         )
 
         self.sub_grp.attrs["goal_state"] = env.goal_state
@@ -133,28 +133,3 @@ class SaveTrajectoryToHDF5Callback(BaseCallback):
 
     def on_episode_end(self):
         del self.grp
-
-
-class PlotTrajectoryCallback(BaseCallback):
-    def on_goal_reset(self):
-        partial_trajectory = np.zeros(
-            ((sim_params.num_simulation_time_steps + 1), env.num_states())
-        )
-
-    def on_step(self):
-        partial_trajectory[k + 1] = current_state
-
-    def on_simulation_end(self):
-        plot_trajectory(
-            initial_state=initial_state,
-            goal_states=goal_states,
-            state_trajectory=actual_trajectory[: t + 1],
-            agent_history=agent_history[: t + 1],
-            partial_trajectory_list=partial_trajectory_list,
-            filepath=str(SAVE_DIR / f"actual_trajectory_{i}.png"),
-            obstacle_centers=obstacle_centers,
-            obstacle_radii=obstacle_radii,
-            plot_obstacles=False,
-        )
-
-    """ partial_trajectory_list.append(partial_trajectory[:k+1]) """
