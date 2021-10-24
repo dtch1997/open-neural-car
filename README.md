@@ -29,7 +29,7 @@ pip install -r requirements.txt
 ```
 
 Generate data for model training 
-```
+```yaml
 python run.py --config-name eval_config.yaml
 ```
 
