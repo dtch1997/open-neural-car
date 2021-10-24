@@ -21,8 +21,11 @@ Install dependencies
 git clone https://github.com/dtch1997/open-neural-car
 cd open-neural-car
 
-# Create conda environment
+# create conda environment
+# this step is interactive
 source bash/setup_conda.sh
+
+# activate conda env you just created
 
 # install requirements
 pip install -r requirements.txt
