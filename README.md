@@ -12,7 +12,7 @@
 </div>
 
 ## Description
-What it does
+Train a neural net agent to mimic a SCP agent for navigating a Reed-Shepp car
 
 ## How to run
 Install dependencies
@@ -26,6 +26,11 @@ source bash/setup_conda.sh
 
 # install requirements
 pip install -r requirements.txt
+```
+
+Generate data for model training 
+```
+python run.py --config-name eval_config.yaml
 ```
 
 Train model with default configuration
