@@ -26,6 +26,7 @@ source bash/setup_conda.sh
 
 # install requirements
 pip install -r requirements.txt
+pre-commit install
 ```
 
 Generate data for model training 
