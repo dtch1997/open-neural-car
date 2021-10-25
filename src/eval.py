@@ -6,6 +6,7 @@ import numpy as np
 from omegaconf import DictConfig
 from pytorch_lightning import seed_everything
 
+from src.callbacks.eval_callbacks import ListOfCallbacks
 from src.utils import utils
 
 SAVE_DIR = Path("data")
@@ -58,10 +59,10 @@ def eval(config: DictConfig):
         seed_everything(config.seed, workers=True)
 
     agent = hydra.utils.instantiate(config.agent)
-    env = hydra.utils.instantiate(config.env)
-
-    if "callbacks" in config:
-        callback = hydra.utils.instantiate(config.callbacks)
+    env = hydra.utils.instantiate(config.gymenv)
+    callback = hydra.utils.instantiate(config.callbacks)
+    if callback == {}:
+        callback = ListOfCallbacks([])
 
     sim_params = config.simulation
 

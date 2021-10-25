@@ -5,7 +5,7 @@ workflow: eval
 defaults:
   - _self_
   - agent: scp.yaml
-  - env: car.yaml
+  - gymenv: car.yaml
   - simulation: default.yaml
   - mode: default.yaml
   - callbacks: eval.yaml
