@@ -4,39 +4,85 @@ import h5py
 import numpy as np
 import pytorch_lightning as pl
 import torch
+from torch._C import TracingState
 from torch.utils.data import DataLoader, Dataset, random_split
 
 
 class CarDataset(Dataset):
+    """Initializes a dataset from the output of
+    src.callbacks.eval_callbacks.SaveTrajectoryToHDF5Callback"""
+
     def __init__(self, data_filepath, transform=None, target_transform=None):
-        self.dataset = h5py.File(data_filepath, "r")["simulation_0"]
+        # By assumption, there is only one simulation
+        if transform is None:
+            transform = self._torchify
+        if target_transform is None:
+            target_transform = self._torchify
+        self.transform = transform
+        self.target_transform = target_transform
+        self.simulation_grp = h5py.File(data_filepath, "r")["simulation"]
 
     def __len__(self):
-        return self.dataset.attrs["num_total_steps"]
+        return self.simulation_grp.attrs["num_simulation_steps"]
+
+    def _idx_to_episode_goal_step(self, idx):
+        """Convert a single integer idx in [0, len(self)) to the
+        corresponding episode number, goal, and the step within that goal"""
+        # Calculate the correct episode_number
+        next_episode_number = 0
+        episode_number = None
+        next_cumulative_episode_steps = 0
+        cumulative_episode_steps = None
+        while next_cumulative_episode_steps <= idx:
+            cumulative_episode_steps = next_cumulative_episode_steps
+            episode_number = next_episode_number
+            next_cumulative_episode_steps += self._get_episode_grp(episode_number).attrs[
+                "num_episode_steps"
+            ]
+            next_episode_number += 1
+        episode_step = idx - cumulative_episode_steps
+
+        # Calculate the correct goal_number
+        next_goal_number = 0
+        goal_number = None
+        next_cumulative_goal_steps = 0
+        cumulative_goal_steps = None
+        while next_cumulative_goal_steps <= episode_step:
+            cumulative_goal_steps = next_cumulative_goal_steps
+            goal_number = next_goal_number
+            next_cumulative_goal_steps += self._get_goal_grp(episode_number, goal_number).attrs[
+                "num_goal_steps"
+            ]
+            next_goal_number += 1
+        goal_step = episode_step - cumulative_goal_steps
+        return episode_number, goal_number, goal_step
+
+    def _get_episode_grp(self, episode_number):
+        """ Get the subgroup of data corresponding to given episode number """
+        return self.simulation_grp[f"episode_{episode_number}"]
+
+    def _get_goal_grp(self, episode_number, goal_number):
+        """ Get the subgroup of data corresponding to given goal in a given episode """
+        episode_grp = self._get_episode_grp(episode_number)
+        return episode_grp[f"goal_{goal_number}"]
+
+    @staticmethod
+    def _torchify(x: np.ndarray):
+        return torch.from_numpy(x.astype(np.float32))
 
     def __getitem__(self, idx):
-        goal = 0
-        for current_goal, end_marker in enumerate(self.dataset.attrs["end_markers"]):
-            if end_marker >= idx:
-                goal = current_goal
-                break
+        episode_number, goal_number, goal_step = self._idx_to_episode_goal_step(idx)
+        goal_group = self._get_goal_grp(episode_number, goal_number)
 
-        start_marker = self.dataset.attrs["end_markers"][goal - 1] if goal > 0 else 0
-        traj_time = idx - start_marker - 1 if start_marker > 0 else idx
-
-        sub_data = self.dataset[f"goal_{goal}"]
-        current_state = torch.from_numpy(
-            sub_data["state_trajectory"][traj_time, :].astype(np.float32)
-        )
-        action = torch.from_numpy(sub_data["input_trajectory"][traj_time, :].astype(np.float32))
-        goal_state = torch.from_numpy(sub_data.attrs["goal_state"].astype(np.float32))
+        current_state = goal_group["state_trajectory"][goal_step]
+        action = goal_group["input_trajectory"][goal_step]
+        goal_state = goal_group.attrs["goal_state"]
 
         trunc_state = current_state[3:]
         relative_goal = current_state[:3] - goal_state[:3]
-        inp = torch.cat([relative_goal, trunc_state])
+        inp = np.concatenate([relative_goal, trunc_state])
         oup = action
-
-        return inp, oup
+        return self.transform(inp), self.target_transform(oup)
 
 
 class CarDataModule(pl.LightningDataModule):
@@ -48,6 +94,8 @@ class CarDataModule(pl.LightningDataModule):
         num_workers: int = 0,
         pin_memory: bool = False,
         data_seed: int = 0,
+        transform=None,
+        target_transform=None,
     ):
         super().__init__()
         self.data_filepath = data_filepath
@@ -56,6 +104,8 @@ class CarDataModule(pl.LightningDataModule):
         self.num_workers = num_workers
         self.pin_memory = pin_memory
         self.data_seed = data_seed
+        self.transform = transform
+        self.target_transform = target_transform
 
     @property
     def train_fraction(self):
@@ -70,9 +120,9 @@ class CarDataModule(pl.LightningDataModule):
         return self.train_val_test_split[2]
 
     def prepare_data(self):
-        self.dataset = CarDataset(self.data_filepath)
+        self.dataset = CarDataset(self.data_filepath, self.transform, self.target_transform)
 
-    def setup(self):
+    def setup(self, stage: Optional[str] = None):
         train_len = int(self.train_fraction * len(self.dataset))
         val_len = int(self.val_fraction * len(self.dataset))
         test_len = len(self.dataset) - train_len - val_len

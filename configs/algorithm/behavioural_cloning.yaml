@@ -1,0 +1,3 @@
+_target_: src.algorithms.behavioural_cloning.BehaviouralCloning
+lr: 0.001
+weight_decay: 5.0e-4

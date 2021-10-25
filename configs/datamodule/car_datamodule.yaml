@@ -1,0 +1,10 @@
+_target_: src.datamodules.car_datamodule.CarDataModule
+
+data_filepath: ! "${data_dir}/simulation_output.hdf5" # data_dir is specified in config.yaml
+batch_size: 64
+train_val_test_split: [0.7, 0.2, 0.1]
+num_workers: 0
+pin_memory: False
+data_seed: 0
+transform: null
+target_transform: null

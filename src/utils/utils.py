@@ -66,8 +66,12 @@ def extras(config: DictConfig) -> None:
 def print_config(
     config: DictConfig,
     fields: Sequence[str] = (
+        "agent",
+        "env",
+        "simulation",
+        "algorithm",
+        "policy",
         "trainer",
-        "model",
         "datamodule",
         "callbacks",
         "logger",
@@ -112,7 +116,7 @@ def empty(*args, **kwargs):
 @rank_zero_only
 def log_hyperparameters(
     config: DictConfig,
-    model: pl.LightningModule,
+    policy: pl.LightningModule,
     datamodule: pl.LightningDataModule,
     trainer: pl.Trainer,
     callbacks: List[pl.Callback],
@@ -128,7 +132,7 @@ def log_hyperparameters(
 
     # choose which parts of hydra config will be saved to loggers
     hparams["trainer"] = config["trainer"]
-    hparams["model"] = config["model"]
+    hparams["policy"] = config["policy"]
     hparams["datamodule"] = config["datamodule"]
     if "seed" in config:
         hparams["seed"] = config["seed"]
@@ -136,12 +140,12 @@ def log_hyperparameters(
         hparams["callbacks"] = config["callbacks"]
 
     # save number of model parameters
-    hparams["model/params_total"] = sum(p.numel() for p in model.parameters())
-    hparams["model/params_trainable"] = sum(
-        p.numel() for p in model.parameters() if p.requires_grad
+    hparams["policy/params_total"] = sum(p.numel() for p in policy.parameters())
+    hparams["policy/params_trainable"] = sum(
+        p.numel() for p in policy.parameters() if p.requires_grad
     )
-    hparams["model/params_not_trainable"] = sum(
-        p.numel() for p in model.parameters() if not p.requires_grad
+    hparams["policy/params_not_trainable"] = sum(
+        p.numel() for p in policy.parameters() if not p.requires_grad
     )
 
     # send hparams to all loggers

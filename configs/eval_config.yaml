@@ -6,7 +6,6 @@ defaults:
   - _self_
   - agent: scp.yaml
   - env: car.yaml
-  - policy: mlp_policy.yaml
   - simulation: default.yaml
   - mode: default.yaml
   - callbacks: eval.yaml

@@ -10,7 +10,6 @@ class BehaviouralCloning(LightningModule):
 
     def __init__(
         self,
-        policy: torch.nn.Module,
         lr: float = 0.001,
         weight_decay: float = 0.0005,
     ):
@@ -19,7 +18,6 @@ class BehaviouralCloning(LightningModule):
         # this line ensures params passed to LightningModule will be saved to ckpt
         # it also allows to access params with 'self.hparams' attribute
         self.save_hyperparameters()
-        self.policy = policy
         # loss function
         self.criterion = torch.nn.SmoothL1Loss()
 
@@ -29,8 +27,11 @@ class BehaviouralCloning(LightningModule):
         self.val_mae = MeanAbsoluteError()
         self.test_mae = MeanAbsoluteError()
 
+    def update_policy(self, policy: torch.nn.Module):
+        self.policy = policy
+
     def forward(self, x: torch.Tensor):
-        return self.model(x)
+        return self.policy(x)
 
     def step(self, batch: Any):
         observations, actions_true = batch

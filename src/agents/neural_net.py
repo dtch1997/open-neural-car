@@ -4,8 +4,10 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+from src.agents.base import BaseAgent
 
-class InferenceWrapper(torch.nn.Module):
+
+class InferenceWrapper(torch.nn.Module, BaseAgent):
     """Inference wrapper for a trained policy."""
 
     def __init__(self, policy: torch.nn.Module):

@@ -3,7 +3,7 @@ from typing import *
 import cvxpy as cp
 import numpy as np
 
-from src.core.agent import BaseAgent
+from src.agents.base import BaseAgent
 from src.envs.car import Environment as Env
 from src.utils import AttrDict
 

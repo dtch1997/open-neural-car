@@ -89,7 +89,14 @@ def eval(config: DictConfig):
                 if sim_params.render:
                     env.render()
                 t += 1  # Increment the timer
-                action = agent.get_action(current_state)
+                try:
+                    action = agent.get_action(current_state)
+                except Exception as e:
+                    # If agent is unable to take an action, end the goal early
+                    log.info(
+                        f"Episode {episode_number}, goal {goal_number} exited at step {step_number} with error {str(e)}"
+                    )
+                    break
                 next_state, reward, done, info = env.take_action(action)
 
                 callback.update_locals(locals())

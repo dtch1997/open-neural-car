@@ -90,46 +90,63 @@ class SaveTrajectoryToHDF5Callback(BaseCallback):
 
     def __init__(self, save_dir: str, file_name: str):
         super(SaveTrajectoryToHDF5Callback, self).__init__()
-        Path(save_dir).mkdir(exist_ok=True, parents=True)
-        self.save_path = Path(save_dir) / file_name
-
-    def on_simulation_start(self):
         import h5py
 
+        Path(save_dir).mkdir(exist_ok=True, parents=True)
+        self.save_path = Path(save_dir) / file_name
         self.output_file = h5py.File(str(self.save_path), "w")
 
+    def __del__(self):
+        self.output_file.close()
+
+    def on_simulation_start(self):
+        self.simulation_grp = self.output_file.create_group("simulation")
+        self.simulation_grp.attrs["num_simulation_steps"] = 0
+        self.simulation_grp.attrs["num_episodes"] = 0
+
     def on_episode_start(self):
-        self.grp = self.output_file.create_group(f"episode_{self.locals['episode_number']}")
+        self.simulation_grp.attrs["num_episodes"] += 1
+        self.episode_grp = self.simulation_grp.create_group(
+            f"episode_{self.locals['episode_number']}"
+        )
+        self.episode_grp.attrs["num_episode_steps"] = 0
+        self.episode_grp.attrs["num_goals"] = 0
 
     def on_goal_start(self):
-        self.sub_grp = self.grp.create_group(f"goal_{self.locals['goal_number']}")
+        self.episode_grp.attrs["num_goals"] += 1
+        self.goal_grp = self.episode_grp.create_group(f"goal_{self.locals['goal_number']}")
 
         sim_params = self.locals["sim_params"]
         env = self.locals["env"]
 
         # By default the state/input trajectories assume max possible simulation steps
-        self.state_trajectory = self.sub_grp.create_dataset(
+        self.state_trajectory = self.goal_grp.create_dataset(
             "state_trajectory", shape=(sim_params.num_simulation_time_steps + 1, 7), dtype="f"
         )
-        self.input_trajectory = self.sub_grp.create_dataset(
+        self.input_trajectory = self.goal_grp.create_dataset(
             "input_trajectory", shape=(sim_params.num_simulation_time_steps, 2), dtype="f"
         )
 
-        self.sub_grp.attrs["goal_state"] = env.goal_state
-        self.sub_grp.attrs["obstacle_centers"] = env.obstacle_centers
-        self.sub_grp.attrs["obstacle_radii"] = env.obstacle_radii
-        self.sub_grp.attrs["num_steps"] = 0
+        self.goal_grp.attrs["goal_state"] = env.goal_state
+        self.goal_grp.attrs["obstacle_centers"] = env.obstacle_centers
+        self.goal_grp.attrs["obstacle_radii"] = env.obstacle_radii
+        self.goal_grp.attrs["num_goal_steps"] = 0
 
     def on_take_action(self):
-        self.sub_grp.attrs["num_steps"] += 1
+        self.goal_grp.attrs["num_goal_steps"] += 1
+        self.episode_grp.attrs["num_episode_steps"] += 1
+        self.simulation_grp.attrs["num_simulation_steps"] += 1
         self.state_trajectory[self.locals["step_number"]] = self.locals["current_state"]
         self.input_trajectory[self.locals["step_number"]] = self.locals["action"]
 
     def on_goal_end(self):
         self.state_trajectory[self.locals["step_number"] + 1] = self.locals["current_state"]
-        del self.sub_grp
+        del self.goal_grp
         del self.state_trajectory
         del self.input_trajectory
 
     def on_episode_end(self):
-        del self.grp
+        del self.episode_grp
+
+    def on_simulation_end(self):
+        del self.simulation_grp

@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 import hydra
+import torch
 from omegaconf import DictConfig
 from pytorch_lightning import (
     Callback,
@@ -35,9 +36,15 @@ def train(config: DictConfig) -> Optional[float]:
     log.info(f"Instantiating datamodule <{config.datamodule._target_}>")
     datamodule: LightningDataModule = hydra.utils.instantiate(config.datamodule)
 
-    # Init lightning model
-    log.info(f"Instantiating model <{config.model._target_}>")
-    model: LightningModule = hydra.utils.instantiate(config.model)
+    # Init policy
+    log.info(f"Instantiating policy <{config.policy._target_}>")
+    print(config.policy)
+    policy: torch.nn.Module = hydra.utils.instantiate(config.policy)
+
+    # Init algorithm
+    log.info(f"Instantiating algorithm <{config.algorithm._target_}>")
+    algorithm: LightningModule = hydra.utils.instantiate(config.algorithm)
+    algorithm.update_policy(policy)
 
     # Init lightning callbacks
     callbacks: List[Callback] = []
@@ -65,7 +72,7 @@ def train(config: DictConfig) -> Optional[float]:
     log.info("Logging hyperparameters!")
     utils.log_hyperparameters(
         config=config,
-        model=model,
+        policy=algorithm,
         datamodule=datamodule,
         trainer=trainer,
         callbacks=callbacks,
@@ -74,7 +81,7 @@ def train(config: DictConfig) -> Optional[float]:
 
     # Train the model
     log.info("Starting training!")
-    trainer.fit(model=model, datamodule=datamodule)
+    trainer.fit(model=algorithm, datamodule=datamodule)
 
     # Evaluate model on test set, using the best model achieved during training
     if config.get("test_after_training") and not config.trainer.get("fast_dev_run"):
@@ -85,7 +92,7 @@ def train(config: DictConfig) -> Optional[float]:
     log.info("Finalizing!")
     utils.finish(
         config=config,
-        model=model,
+        model=algorithm,
         datamodule=datamodule,
         trainer=trainer,
         callbacks=callbacks,
