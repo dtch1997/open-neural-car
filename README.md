@@ -50,9 +50,9 @@ python run.py trainer.gpus=1
 ```
 
 # Train model with chosen experiment configuration from [configs/experiment/](configs/experiment/)
-# ```yaml
+```yaml
 # python run.py experiment=experiment_name
-# ```
+```
 
 You can override any parameter from command line like this
 ```yaml
