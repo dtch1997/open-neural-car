@@ -34,7 +34,7 @@ pre-commit install
 
 Generate data for model training
 ```yaml
-python run.py --config-name eval_config.yaml
+python run.py --config-name datagen_config.yaml
 ```
 
 Train model with default configuration
