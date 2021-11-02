@@ -6,6 +6,8 @@ from typing import Any, Dict, List
 
 import numpy as np
 
+from src.utils.statistics import Average
+
 
 class BaseCallback(ABC):
     def __init__(self, verbose: int = 0):
@@ -150,3 +152,20 @@ class SaveTrajectoryToHDF5Callback(BaseCallback):
 
     def on_simulation_end(self):
         del self.simulation_grp
+
+
+class RecordAverageAgentTimeCallback(BaseCallback):
+    def __init__(self):
+        super(RecordAverageAgentTimeCallback, self).__init__()
+        self.average_time = Average()
+
+    def on_episode_start(self):
+        self.average_time.reset()
+
+    def on_take_action(self):
+        elapsed_time = self.locals["elapsed_time"]
+        if elapsed_time is not None:
+            self.average_time.update(elapsed_time)
+
+    def on_episode_end(self):
+        print(f"Episode average elapsed time: {self.average_time.value}")

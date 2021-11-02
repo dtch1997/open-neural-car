@@ -1,3 +1,5 @@
+from timeit import default_timer as timer
+
 import numpy as np
 
 
@@ -23,3 +25,15 @@ class AttrDict(dict):
         for key, value in dict.items():
             attrdict[key] = value  # Calls __setitem_
         return attrdict
+
+
+def time_wrapper(f):
+    """ Wrap a function to also return elapsed time """
+
+    def wrapped_f(*args, **kwargs):
+        start = timer()
+        retval = f(*args, **kwargs)
+        end = timer()
+        return retval, end - start
+
+    return wrapped_f

@@ -7,7 +7,7 @@ from omegaconf import DictConfig
 from pytorch_lightning import seed_everything
 
 from src.callbacks.eval_callbacks import ListOfCallbacks
-from src.utils import utils
+from src.utils import statistics, time_wrapper, utils
 
 SAVE_DIR = Path("data")
 log = utils.get_logger(__name__)
@@ -68,6 +68,7 @@ def eval(config: DictConfig):
 
     callback.update_locals(locals())
     callback.on_simulation_start()
+    agent.get_action = time_wrapper(agent.get_action)
 
     for episode_number in range(sim_params.num_episodes):
         # Reset environment. Done once per episode
@@ -90,10 +91,12 @@ def eval(config: DictConfig):
                 if sim_params.render:
                     env.render()
                 t += 1  # Increment the timer
+
                 try:
-                    action = agent.get_action(current_state)
+                    action, elapsed_time = agent.get_action(current_state)
                 except Exception as e:
                     # If agent is unable to take an action, end the goal early
+                    elapsed_time = None
                     log.info(
                         f"Episode {episode_number}, goal {goal_number} exited at step {step_number} with error {str(e)}"
                     )

@@ -3,3 +3,4 @@ callbacks:
   - _target_: src.callbacks.eval_callbacks.SaveTrajectoryToHDF5Callback
     save_dir: ${data_dir} # data_dir is specified in config.yaml
     file_name: simulation_output.hdf5
+  - _target_: src.callbacks.eval_callbacks.RecordAverageAgentTimeCallback
