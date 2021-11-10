@@ -4,8 +4,10 @@ import torch
 from pytorch_lightning import LightningModule
 from torchmetrics.regression.mean_absolute_error import MeanAbsoluteError
 
+from src.agents.neural_net import InferenceWrapper
 
-class BehaviouralCloning(LightningModule):
+
+class BehaviouralCloning(LightningModule, InferenceWrapper):
     """A wrapper to train a policy via behavioural cloning"""
 
     def __init__(
@@ -26,6 +28,9 @@ class BehaviouralCloning(LightningModule):
         self.train_mae = MeanAbsoluteError()
         self.val_mae = MeanAbsoluteError()
         self.test_mae = MeanAbsoluteError()
+
+    def get_policy(self):
+        return self.policy
 
     def update_policy(self, policy: torch.nn.Module):
         self.policy = policy
