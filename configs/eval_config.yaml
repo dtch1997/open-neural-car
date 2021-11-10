@@ -5,8 +5,6 @@ workflow: eval
 defaults:
   - _self_
   - agent: neural_net.yaml
-  - policy: mlp_policy.yaml
-  - algorithm: behavioural_cloning.yaml
   - gymenv: car.yaml
   - simulation: default.yaml
   - mode: default.yaml

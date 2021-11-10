@@ -8,7 +8,7 @@ defaults:
   - gymenv: car.yaml
   - simulation: default.yaml
   - mode: default.yaml
-  - callbacks: eval.yaml
+  - callbacks: datagen.yaml
   - experiment: null
   - hparams_search: null
 
