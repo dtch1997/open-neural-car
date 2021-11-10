@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from typing import *
 
 import cvxpy as cp
@@ -69,6 +71,32 @@ class SCPAgent(BaseAgent):
     @property
     def num_obstacles(self):
         return self._obstacle_centers.shape[0]
+
+    @staticmethod
+    def load(save_path: Path) -> "SCPAgent":
+        with open(save_path, "r") as file:
+            config_dict = json.load(file)
+        return SCPAgent(**config_dict)
+
+    def save(self, save_path: Path):
+        config_dict = {
+            # Basic physics engine parameters
+            "time_step_duration": self.time_step_duration,
+            "num_time_steps_ahead": self.num_time_steps_ahead,
+            # The control problem is reparametrized with different control variables
+            "state_variable_names": self.state_variable_names,
+            "action_variable_names": self.action_variable_names,
+            "convergence_metric": self.convergence_metric,
+            # Solver parameters
+            "solve_tol": self.solve_tol,
+            "convergence_tol": self.convergence_tol,
+            "max_iters": self.max_iters,
+            "solver": self.solver,
+            # Debug parameters
+            "verbose": self.verbose,
+        }
+        with open(save_path, "w") as file:
+            json.dump(config_dict, file)
 
     def _setup_cp_problem(self):
         """Set up the CVXPY problem once following DPP principles.

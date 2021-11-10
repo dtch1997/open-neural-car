@@ -1,7 +1,8 @@
+from pathlib import Path
 from typing import Any, List
 
 import torch
-from pytorch_lightning import LightningModule
+from pytorch_lightning import LightningModule, Trainer
 from torchmetrics.regression.mean_absolute_error import MeanAbsoluteError
 
 from src.agents.neural_net import InferenceWrapper
@@ -28,6 +29,14 @@ class BehaviouralCloning(LightningModule, InferenceWrapper):
         self.train_mae = MeanAbsoluteError()
         self.val_mae = MeanAbsoluteError()
         self.test_mae = MeanAbsoluteError()
+
+    @staticmethod
+    def load(save_path: Path):
+        return BehaviouralCloning.load_from_checkpoint(save_path)
+
+    def save(self, save_path: Path):
+        trainer = Trainer()
+        trainer.save_checkpoint(save_path)
 
     def get_policy(self):
         return self.policy

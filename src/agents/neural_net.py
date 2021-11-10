@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Dict
 
 import numpy as np
@@ -10,6 +11,15 @@ from src.agents.base import BaseAgent
 
 class InferenceWrapper(BaseAgent, ABC):
     """Inference wrapper for a trained policy."""
+
+    @staticmethod
+    @abstractmethod
+    def load(self, save_path: Path) -> "InferenceWrapper":
+        pass
+
+    @abstractmethod
+    def save(self, save_path: Path):
+        pass
 
     @abstractmethod
     def get_policy(self):
