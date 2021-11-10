@@ -4,7 +4,9 @@ workflow: eval
 # specify here default evaluation configuration
 defaults:
   - _self_
-  - agent: scp.yaml
+  - agent: neural_net.yaml
+  - policy: mlp_policy.yaml
+  - algorithm: behavioural_cloning.yaml
   - gymenv: car.yaml
   - simulation: default.yaml
   - mode: default.yaml

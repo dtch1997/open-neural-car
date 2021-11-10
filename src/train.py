@@ -44,7 +44,6 @@ def train(config: DictConfig) -> Optional[float]:
     # Init algorithm
     log.info(f"Instantiating algorithm <{config.algorithm._target_}>")
     algorithm: LightningModule = hydra.utils.instantiate(config.algorithm)
-    algorithm.update_policy(policy)
 
     # Init lightning callbacks
     callbacks: List[Callback] = []

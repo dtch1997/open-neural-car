@@ -5,34 +5,29 @@ from typing import Dict
 import numpy as np
 import torch
 import torch.nn.functional as F
+from pytorch_lightning import LightningModule
 
 from src.agents.base import BaseAgent
 
 
-class InferenceWrapper(BaseAgent, ABC):
+class InferenceWrapper(BaseAgent):
     """Inference wrapper for a trained policy."""
 
-    @staticmethod
-    @abstractmethod
-    def load(self, save_path: Path) -> "InferenceWrapper":
-        pass
+    def __init__(self, algorithm: LightningModule, checkpoint_path: str = None):
+        if checkpoint_path is not None:
+            algorithm = algorithm.load_from_checkpoint(checkpoint_path)
+        self.policy = algorithm.policy
 
-    @abstractmethod
-    def save(self, save_path: Path):
-        pass
-
-    @abstractmethod
-    def get_policy(self):
-        pass
+    def reset(self, env):
+        self._goal_state = env.goal_state
 
     @torch.no_grad()
     def get_action(self, state: np.ndarray) -> np.ndarray:
-        relative_goal = state[:3] - self.goal_state[:3]
+        relative_goal = state[:3] - self._goal_state[:3]
         trunc_state = state[3:]
         inputs_np = np.concatenate([trunc_state, relative_goal], axis=0)
         inputs = torch.from_numpy(inputs_np).float().view(1, -1)
 
-        policy = self.get_policy()
-        nn_action = policy(inputs)
+        nn_action = self.policy(inputs)
         nn_action = nn_action.detach().clone().numpy()[0]
         return nn_action

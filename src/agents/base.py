@@ -9,9 +9,5 @@ class BaseAgent(ABC):
     def get_action(self, state):
         pass
 
-    @staticmethod
-    def load(self, save_path: Path) -> "BaseAgent":
-        pass
-
-    def save(self, save_path: Path):
+    def reset(self, env):
         pass

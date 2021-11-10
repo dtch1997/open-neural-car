@@ -1,0 +1,15 @@
+_target_: src.agents.neural_net.InferenceWrapper
+algorithm:
+  _target_: src.algorithms.behavioural_cloning.BehaviouralCloning
+  policy:
+    _target_: src.policies.mlp_policy.MlpPolicy
+    _convert_: partial
+    input_size: 7
+    net_arch:
+      - 256
+      - 256
+    output_size: 2
+    nonlinearity: "tanh"
+  lr: 0.001
+  weight_decay: 5.0e-4
+checkpoint_path: null # override this in command line
